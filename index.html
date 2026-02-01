@@ -4,62 +4,95 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EcoTracker – Carbon Footprint Calculator</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
+    :root {
+      --bg: #f4f9f4;
+      --text: #2f4f4f;
+      --card: #ffffff;
+      --primary: #5a8768;
+    }
+
+    body.dark {
+      --bg: #1e1e1e;
+      --text: #f0f0f0;
+      --card: #2c2c2c;
+      --primary: #7bcf9b;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      background-color: #f4f9f4;
-      color: #2f4f4f;
+      background-color: var(--bg);
+      color: var(--text);
+      transition: 0.3s;
     }
+
     header {
-      background-color: #5a8768;
+      background-color: var(--primary);
       color: white;
       padding: 20px;
       text-align: center;
     }
+
     section {
       padding: 20px;
       max-width: 900px;
       margin: auto;
     }
+
     .card {
-      background: white;
+      background: var(--card);
       padding: 20px;
       margin-bottom: 20px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
+
     label {
       display: block;
       margin-top: 10px;
       font-weight: bold;
     }
+
     input {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
     }
+
     button {
       margin-top: 15px;
       padding: 10px 15px;
-      background-color: #5a8768;
+      background-color: var(--primary);
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #4a7258;
-    }
+
     footer {
       text-align: center;
       padding: 10px;
       background-color: #c9ed96;
       font-size: 14px;
     }
+
+    .toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
   </style>
 </head>
 <body>
+
+<div class="toggle">
+  <button onclick="toggleMode()">🌙 / ☀️</button>
+</div>
 
 <header>
   <h1>EcoTracker</h1>
@@ -69,52 +102,81 @@
 <section>
   <div class="card">
     <h2>Carbon Footprint Calculator</h2>
-    <label>Electricity Usage (units per month)</label>
+
+    <label>Electricity Usage (units/month)</label>
     <input type="number" id="electricity" />
 
-    <label>Transport Distance (km per day)</label>
+    <label>Transport Distance (km/day)</label>
     <input type="number" id="transport" />
 
-    <label>Fuel Usage (litres per month)</label>
+    <label>Fuel Usage (litres/month)</label>
     <input type="number" id="fuel" />
 
     <button onclick="calculate()">Calculate</button>
 
     <h3 id="result"></h3>
     <p id="credits"></p>
-    <p id="suggestion"></p>
+  </div>
+
+  <div class="card">
+    <h2>Carbon Emission Report</h2>
+    <canvas id="chart"></canvas>
   </div>
 
   <div class="card">
     <h2>What are Carbon Credits?</h2>
-    <p>One carbon credit represents the reduction of one metric ton of carbon dioxide (CO₂). Individuals and organizations can offset their emissions by purchasing carbon credits.</p>
+    <p>One carbon credit represents the reduction of one metric ton of CO₂. EcoTracker estimates how many credits are needed to offset your emissions.</p>
   </div>
 </section>
 
 <footer>
-  © 2026 EcoTracker | Designed for Sustainability 🌱
+  © 2026 EcoTracker | Sustainability First 🌱
 </footer>
 
 <script>
+  let chart;
+
+  function toggleMode() {
+    document.body.classList.toggle('dark');
+  }
+
   function calculate() {
     const electricity = Number(document.getElementById('electricity').value) || 0;
     const transport = Number(document.getElementById('transport').value) || 0;
     const fuel = Number(document.getElementById('fuel').value) || 0;
 
-    const electricityCO2 = electricity * 0.82; // kg CO2 per unit
-    const transportCO2 = transport * 0.21 * 30; // monthly
-    const fuelCO2 = fuel * 2.31;
+    const eCO2 = electricity * 0.82;
+    const tCO2 = transport * 0.21 * 30;
+    const fCO2 = fuel * 2.31;
 
-    const total = electricityCO2 + transportCO2 + fuelCO2;
-    const yearly = total * 12 / 1000;
+    const total = eCO2 + tCO2 + fCO2;
+    const yearly = (total * 12) / 1000;
     const credits = Math.ceil(yearly);
 
-    document.getElementById('result').innerText = `Monthly Footprint: ${total.toFixed(2)} kg CO₂ | Yearly: ${yearly.toFixed(2)} tons CO₂`;
+    document.getElementById('result').innerText = `Monthly: ${total.toFixed(2)} kg CO₂ | Yearly: ${yearly.toFixed(2)} tons`;
     document.getElementById('credits').innerText = `Carbon Credits Required: ${credits}`;
 
-    document.getElementById('suggestion').innerText = "Tip: Use public transport, reduce electricity usage, and switch to renewable energy.";
+    drawChart(eCO2, tCO2, fCO2);
+  }
+
+  function drawChart(e, t, f) {
+    const ctx = document.getElementById('chart');
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Electricity', 'Transport', 'Fuel'],
+        datasets: [{
+          data: [e, t, f],
+          backgroundColor: ['#5a8768', '#88bfa3', '#c9ed96']
+        }]
+      }
+    });
   }
 </script>
 
 </body>
 </html>
+
